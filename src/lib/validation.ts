@@ -35,6 +35,7 @@ export const resourceSchema = z.object({
   skills:       z.string().min(2, 'Add at least one skill'),
   summary:      z.string().min(10, 'Add a summary').max(600),
   availability: z.enum(['Available','Engaged','Notice Period']),
+  gender:       z.enum(['male','female'], { errorMap: () => ({ message: 'Select gender' }) }),
 });
 export type ResourceValues = z.infer<typeof resourceSchema>;
 

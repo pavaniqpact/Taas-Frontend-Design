@@ -10,6 +10,8 @@ import { Button } from '@/shared/components/ui/Button';
 import { useResources } from '@/store/resources';
 import { useCart } from '@/store/cart';
 import { useToast } from '@/store/toast';
+import { useDemand } from '@/store/demand';
+import { useAuth } from '@/store/auth';
 import { TECHNOLOGIES, SKILLS_BY_TECH, PAGE_SIZE } from '@/constants';
 import type { Candidate } from '@/types';
 import { cn } from '@/lib/utils';
@@ -17,9 +19,11 @@ import { cn } from '@/lib/utils';
 const ALL_SKILLS = [...new Set(Object.values(SKILLS_BY_TECH).flat())].sort();
 
 export function ClientDashboard() {
-  const { openMenu } = useShell();
-  const { candidates } = useResources();
-  const { add, has }   = useCart();
+  const { openMenu }         = useShell();
+  const { candidates }       = useResources();
+  const { add, has }         = useCart();
+  const { user }             = useAuth();
+  const { addDemand, isInDemand } = useDemand();
   const { push }       = useToast();
 
   // ── Filter state ────────────────────────────────────────────────
@@ -50,8 +54,10 @@ export function ClientDashboard() {
   const pageItems  = filtered.slice((safe-1)*PAGE_SIZE, safe*PAGE_SIZE);
 
   function handleAdd(c: Candidate) {
+    if (!user) return;
     add(c);
-    push({ type:'success', title:'Added to shortlist', description:`${c.name} added.` });
+    addDemand(c.id, user.id);
+    push({ type: 'success', title: 'Added to shortlist', description: `${c.name} added.` });
   }
 
   return (
@@ -134,7 +140,7 @@ export function ClientDashboard() {
           ) : (
             <div className={cn('grid gap-4', 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4')}>
               {pageItems.map((c, i) => (
-                <CandidateCard key={c.id} candidate={c} inCart={has(c.id)} onAdd={handleAdd} index={i} />
+                <CandidateCard key={c.id} candidate={c} inCart={has(c.id)} onAdd={handleAdd} index={i} inDemand={isInDemand(c.id)} />
               ))}
             </div>
           )}

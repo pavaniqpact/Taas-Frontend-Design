@@ -5,18 +5,23 @@ import { Topbar } from '@/shared/components/layout/Topbar';
 import { useShell } from '@/shared/components/layout/AppShell';
 import { PageTransition } from '@/shared/components/layout/PageTransition';
 import { Button } from '@/shared/components/ui/Button';
+import { CandidateAvatar } from '@/shared/components/ui/CandidateAvatar';
 import { AvailabilityBadge, SkillTag, TechBadge } from '@/shared/components/ui/Badge';
 import { useResources } from '@/store/resources';
 import { useCart } from '@/store/cart';
 import { useToast } from '@/store/toast';
+import { useDemand } from '@/store/demand';
+import { useAuth } from '@/store/auth';
 import { formatRate } from '@/lib/utils';
 
 export function CandidateDetailsPage() {
   const { id }     = useParams();
   const navigate   = useNavigate();
-  const { openMenu } = useShell();
-  const { getById } = useResources();
-  const { add, has } = useCart();
+  const { openMenu }    = useShell();
+  const { getById }     = useResources();
+  const { add, has }    = useCart();
+  const { user }        = useAuth();
+  const { addDemand }   = useDemand();
   const { push }   = useToast();
   const c = id ? getById(id) : undefined;
 
@@ -40,7 +45,10 @@ export function CandidateDetailsPage() {
   ];
 
   function handleAdd() {
-    add(c!); push({ type:'success', title:'Added to shortlist', description:`${c!.name} added.` });
+    if (!user) return;
+    add(c!);
+    addDemand(c!.id, user.id);
+    push({ type: 'success', title: 'Added to shortlist', description: `${c!.name} added.` });
   }
   function download(label: string) {
     push({ type:'info', title:`Preparing ${label}`, description:'Download will begin shortly.' });
@@ -61,7 +69,7 @@ export function CandidateDetailsPage() {
               <div className="card p-6">
                 <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start">
                   <div className="relative shrink-0">
-                    <img src={c.photo} alt={c.name} className="h-28 w-28 rounded-2xl object-cover ring-4 ring-white shadow-md" />
+                    <CandidateAvatar gender={c!.gender} id={c!.id} size="lg" className="ring-4 ring-white shadow-md" />
                     <span className="absolute -bottom-2 -right-2 grid h-8 w-8 place-items-center rounded-full bg-success text-white ring-4 ring-white" title="Pre-vetted">
                       <FiCheck size={16}/>
                     </span>

@@ -1,7 +1,6 @@
 import type { Candidate, User } from '@/types';
 import { TECHNOLOGIES, SKILLS_BY_TECH } from '@/constants';
 
-// ─── Deterministic PRNG ───────────────────────────────────────────────────────
 function mulberry32(seed: number) {
   return function () {
     seed |= 0; seed = (seed + 0x6d2b79f5) | 0;
@@ -10,6 +9,13 @@ function mulberry32(seed: number) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
+
+// Female first names — used to assign gender
+const FEMALE_NAMES = new Set([
+  'Ananya','Diya','Saanvi','Aadhya','Kiara','Anika','Priya','Riya',
+  'Sneha','Neha','Pooja','Shreya','Divya','Meera','Tanvi','Ishita',
+  'Kavya','Aishwarya','Nisha','Rekha',
+]);
 
 const FIRST = [
   'Aarav','Vivaan','Aditya','Arjun','Sai','Reyansh','Krishna','Ishaan','Rohan','Karthik',
@@ -27,7 +33,7 @@ function buildBatch(recruiterId: string, count: number, startIdx: number): Candi
   const rand = mulberry32(startIdx * 7919 + 13);
   const out: Candidate[] = [];
   for (let i = 0; i < count; i++) {
-    const idx = startIdx + i;
+    const idx   = startIdx + i;
     const first = FIRST[Math.floor(rand() * FIRST.length)];
     const last  = LAST[Math.floor(rand() * LAST.length)];
     const name  = `${first} ${last}`;
@@ -39,11 +45,13 @@ function buildBatch(recruiterId: string, count: number, startIdx: number): Candi
     const avail = AVAIL[Math.floor(rand() * AVAIL.length)];
     const status = rand() > 0.18 ? 'Active' : 'Pending' as const;
     const days  = Math.floor(rand() * 220);
+    const gender: 'male' | 'female' = FEMALE_NAMES.has(first) ? 'female' : 'male';
     out.push({
       id: `cand-${idx.toString().padStart(3, '0')}`,
       recruiterId,
       name,
-      photo: `https://i.pravatar.cc/320?img=${(idx % 70) + 1}`,
+      photo: '',        // not used — avatar rendered from gender + id
+      gender,
       technology: tech,
       experience: exp,
       skills,
@@ -58,7 +66,6 @@ function buildBatch(recruiterId: string, count: number, startIdx: number): Candi
   return out;
 }
 
-// rec-a = 20, rec-b = 30, rec-c = 10  → 60 total
 export const seedCandidates: Candidate[] = [
   ...buildBatch('rec-a', 20, 1),
   ...buildBatch('rec-b', 30, 21),

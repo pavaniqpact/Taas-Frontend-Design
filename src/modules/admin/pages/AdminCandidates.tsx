@@ -9,7 +9,8 @@ import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog';
 import { Modal } from '@/shared/components/ui/Modal';
 import { Button } from '@/shared/components/ui/Button';
 import { Pagination } from '@/shared/components/ui/Pagination';
-import { AvailabilityBadge, SkillTag, StatusBadge, TechBadge } from '@/shared/components/ui/Badge';
+import { SkillTag, TechBadge } from '@/shared/components/ui/Badge';
+import { CandidateAvatar } from '@/shared/components/ui/CandidateAvatar';
 import { useResources } from '@/store/resources';
 import { useToast } from '@/store/toast';
 import { TECHNOLOGIES, PAGE_SIZE, SKILLS_BY_TECH } from '@/constants';
@@ -111,7 +112,7 @@ export function AdminCandidates() {
                 <table className="w-full min-w-[840px] text-sm">
                   <thead>
                     <tr className="border-b border-slate-100 text-left text-xs uppercase tracking-wider text-slate-400">
-                      {['Candidate','Technology','Experience','Rate','Status','Availability','Created',''].map(h=>(
+                      {['Candidate','Technology','Experience','Rate','Created',''].map(h=>(
                         <th key={h} className="px-5 py-3 font-semibold">{h}</th>
                       ))}
                     </tr>
@@ -121,7 +122,7 @@ export function AdminCandidates() {
                       <motion.tr key={c.id} initial={{opacity:0}} animate={{opacity:1}} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/60">
                         <td className="px-5 py-3">
                           <div className="flex items-center gap-3">
-                            <img src={c.photo} alt={c.name} className="h-9 w-9 rounded-full object-cover"/>
+                            <CandidateAvatar gender={c.gender} id={c.id} size="xs" />
                             <div>
                               <p className="font-medium text-secondary">{c.name}</p>
                               <p className="text-xs text-slate-400">{c.recruiterId}</p>
@@ -131,8 +132,6 @@ export function AdminCandidates() {
                         <td className="px-5 py-3"><TechBadge>{c.technology}</TechBadge></td>
                         <td className="px-5 py-3 text-slate-600">{c.experience} yrs</td>
                         <td className="px-5 py-3 font-semibold text-secondary">{formatRate(c.ratePerHour)}</td>
-                        <td className="px-5 py-3"><StatusBadge value={c.status}/></td>
-                        <td className="px-5 py-3"><AvailabilityBadge value={c.availability}/></td>
                         <td className="px-5 py-3 text-slate-500">{formatDate(c.createdAt)}</td>
                         <td className="px-5 py-3">
                           <div className="flex items-center gap-1">
@@ -156,8 +155,11 @@ export function AdminCandidates() {
       <Modal open={!!viewing} onClose={()=>setViewing(null)} title={viewing?.name} description={viewing?.technology}>
         {viewing && <div className="space-y-4">
           <div className="flex items-center gap-4">
-            <img src={viewing.photo} alt={viewing.name} className="h-16 w-16 rounded-xl object-cover ring-2 ring-white shadow"/>
-            <div className="flex flex-wrap gap-2"><StatusBadge value={viewing.status}/><AvailabilityBadge value={viewing.availability}/></div>
+            <CandidateAvatar gender={viewing.gender} id={viewing.id} size="sm" className="ring-2 ring-white shadow" />
+            <div>
+              <p className="font-display font-bold text-secondary">{viewing.name}</p>
+              <p className="text-sm text-slate-500">{viewing.technology}</p>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3 text-sm">
             {[['Experience',`${viewing.experience} yrs`],['Rate',formatRate(viewing.ratePerHour)],['Recruiter',viewing.recruiterId],['Created',formatDate(viewing.createdAt)]].map(([l,v])=>(

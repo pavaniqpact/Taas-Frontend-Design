@@ -34,10 +34,10 @@ export function AdminAddCandidate() {
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } =
     useForm<ResourceValues>({ resolver: zodResolver(resourceSchema), mode:'onChange',
-      defaultValues: { technology:'AI Engineer', availability:'Available', experience:0, ratePerHour:45, summary:'', skills:'' } });
+      defaultValues: { technology:'AI Engineer', availability:'Available', gender:'male' as const, experience:0, ratePerHour:45, summary:'', skills:'' } });
 
   useEffect(() => {
-    if (existing) reset({ name:existing.name, technology:existing.technology, availability:existing.availability,
+    if (existing) reset({ name:existing.name, technology:existing.technology, availability:existing.availability, gender:existing.gender,
       experience:existing.experience, ratePerHour:existing.ratePerHour, skills:existing.skills.join(', '), summary:existing.summary });
   }, [existing, reset]);
 
@@ -48,7 +48,7 @@ export function AdminAddCandidate() {
       name:v.name, technology:v.technology as any, availability:v.availability,
       experience:v.experience, ratePerHour:v.ratePerHour, skills, summary:v.summary,
       documents,
-      photo: photo ?? `https://i.pravatar.cc/320?u=${Math.random()}`,
+      photo: '', gender: v.gender as 'male' | 'female',
     };
     if (isEdit && existing) {
       await update(existing.id, payload);
@@ -99,6 +99,14 @@ export function AdminAddCandidate() {
                   <select className="field" {...register('availability')}>
                     {AVAILABILITIES.map(a=><option key={a} value={a}>{a}</option>)}
                   </select>
+                </div>
+                <div>
+                  <label className="label">Gender</label>
+                  <select className={`field${errors.gender ? ' field-error' : ''}`} {...register('gender')}>
+                    <option value="male">♂ Male</option>
+                    <option value="female">♀ Female</option>
+                  </select>
+                  {errors.gender && <p className="mt-1 text-xs font-medium text-danger">{(errors.gender as any).message}</p>}
                 </div>
                 <Input label="Experience (years)" type="number" placeholder="5" error={errors.experience?.message} {...register('experience')}/>
                 <Input label="Rate per hour ($)" type="number" placeholder="45" error={errors.ratePerHour?.message} {...register('ratePerHour')}/>

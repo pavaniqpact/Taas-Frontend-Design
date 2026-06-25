@@ -12,9 +12,11 @@ import { Modal } from '@/shared/components/ui/Modal';
 import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog';
 import { Input } from '@/shared/components/ui/Input';
 import { TechBadge } from '@/shared/components/ui/Badge';
+import { CandidateAvatar } from '@/shared/components/ui/CandidateAvatar';
 import { useCart } from '@/store/cart';
 import { useAuth } from '@/store/auth';
 import { useToast } from '@/store/toast';
+import { useDemand } from '@/store/demand';
 import { contactSalesSchema, type ContactSalesValues } from '@/lib/validation';
 import { formatRate, delay } from '@/lib/utils';
 import type { Candidate } from '@/types';
@@ -23,8 +25,9 @@ export function CartPage() {
   const navigate     = useNavigate();
   const { openMenu } = useShell();
   const { items, remove, clear, count } = useCart();
-  const { user }     = useAuth();
-  const { push }     = useToast();
+  const { user }                        = useAuth();
+  const { push }                        = useToast();
+  const { removeDemand, clearUserDemand } = useDemand();
 
   // ── State — one contact-sales modal, one confirm-remove ──
   const [salesOpen, setSalesOpen]   = useState(false);
@@ -50,9 +53,10 @@ export function CartPage() {
   }
 
   function confirmRemove() {
-    if (!toRemove) return;
+    if (!toRemove || !user) return;
     remove(toRemove.id);
-    push({ type:'info', title:'Removed from shortlist', description:`${toRemove.name} removed.` });
+    removeDemand(toRemove.id, user.id);
+    push({ type: 'info', title: 'Removed from shortlist', description: `${toRemove.name} removed.` });
     setToRemove(null);
   }
 
@@ -88,7 +92,7 @@ export function CartPage() {
                   {items.map(c => (
                     <motion.div key={c.id} initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }}
                       exit={{ opacity:0, x:-20 }} className="card flex items-center gap-4 p-4">
-                      <img src={c.photo} alt={c.name} className="h-14 w-14 rounded-xl object-cover ring-2 ring-white shadow-sm shrink-0" />
+                      <CandidateAvatar gender={c.gender} id={c.id} size="sm" className="ring-2 ring-white shadow-sm" />
                       <div className="min-w-0 flex-1">
                         <p className="font-display font-bold text-secondary truncate">{c.name}</p>
                         <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-500">
@@ -121,7 +125,7 @@ export function CartPage() {
                   <Button fullWidth size="lg" className="mt-5" onClick={() => setSalesOpen(true)}>
                     <FiSend size={14}/> Contact sales
                   </Button>
-                  <button onClick={clear} className="mt-3 w-full text-center text-sm text-slate-400 hover:text-danger">
+                  <button onClick={() => { if (user) clearUserDemand(user.id); clear(); }} className="mt-3 w-full text-center text-sm text-slate-400 hover:text-danger">
                     Clear shortlist
                   </button>
                 </div>

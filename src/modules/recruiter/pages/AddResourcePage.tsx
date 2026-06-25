@@ -37,7 +37,7 @@ export function AddResourcePage() {
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } =
     useForm<ResourceValues>({
       resolver: zodResolver(resourceSchema), mode: 'onChange',
-      defaultValues: { technology:'AI Engineer', availability:'Available', experience:0, ratePerHour:45, summary:'', skills:'' },
+      defaultValues: { technology:'AI Engineer', availability:'Available', gender:'male' as const, experience:0, ratePerHour:45, summary:'', skills:'' },
     });
 
   useEffect(() => {
@@ -45,7 +45,7 @@ export function AddResourcePage() {
       name: existing.name, technology: existing.technology,
       availability: existing.availability, experience: existing.experience,
       ratePerHour: existing.ratePerHour, skills: existing.skills.join(', '),
-      summary: existing.summary,
+      summary: existing.summary, gender: existing.gender,
     });
   }, [existing, reset]);
 
@@ -56,8 +56,9 @@ export function AddResourcePage() {
     const payload = {
       name: v.name, technology: v.technology as any, availability: v.availability,
       experience: v.experience, ratePerHour: v.ratePerHour, skills, summary: v.summary,
+      gender: v.gender as 'male' | 'female',
       documents,
-      photo: photo ?? `https://i.pravatar.cc/320?u=${Math.random()}`,
+      photo: '',
     };
 
     if (isEdit && existing) {
@@ -123,6 +124,14 @@ export function AddResourcePage() {
                   <select className="field" {...register('availability')}>
                     {AVAILABILITIES.map(a => <option key={a} value={a}>{a}</option>)}
                   </select>
+                </div>
+                <div>
+                  <label className="label">Gender</label>
+                  <select className={`field${errors.gender ? ' field-error' : ''}`} {...register('gender')}>
+                    <option value="male">♂ Male</option>
+                    <option value="female">♀ Female</option>
+                  </select>
+                  {errors.gender && <p className="mt-1 text-xs font-medium text-danger">{errors.gender.message}</p>}
                 </div>
                 <Input label="Experience (years)" type="number" placeholder="5" error={errors.experience?.message} {...register('experience')} />
                 <Input label="Rate per hour ($)" type="number" placeholder="45"  error={errors.ratePerHour?.message} {...register('ratePerHour')} />

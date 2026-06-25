@@ -14,6 +14,7 @@ export interface Candidate {
   recruiterId: string;
   name: string;
   photo: string;
+  gender: 'male' | 'female';
   technology: Technology;
   experience: number;       // years
   skills: string[];

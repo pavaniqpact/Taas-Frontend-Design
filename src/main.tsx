@@ -6,6 +6,7 @@ import { ToastProvider }    from '@/store/toast';
 import { AuthProvider }     from '@/store/auth';
 import { ResourceProvider } from '@/store/resources';
 import { CartProvider }     from '@/store/cart';
+import { DemandProvider }   from '@/store/demand';
 import { ToastViewport }    from '@/shared/components/ui/ToastViewport';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -13,10 +14,13 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <ToastProvider>
       <AuthProvider>
         <ResourceProvider>
-          <CartProvider>
-            <App />
-            <ToastViewport />
-          </CartProvider>
+          {/* DemandProvider wraps CartProvider so demand state outlives any cart reset */}
+          <DemandProvider>
+            <CartProvider>
+              <App />
+              <ToastViewport />
+            </CartProvider>
+          </DemandProvider>
         </ResourceProvider>
       </AuthProvider>
     </ToastProvider>
