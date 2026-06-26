@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiPlus } from 'react-icons/fi';
+import { FiPlus, FiSearch, FiX } from 'react-icons/fi';
 import { Topbar } from '@/shared/components/layout/Topbar';
 import { useShell } from '@/shared/components/layout/AppShell';
 import { PageTransition } from '@/shared/components/layout/PageTransition';
@@ -53,11 +53,9 @@ export function RecruiterDashboard() {
 
   return (
     <>
+      {/* Same as super admin: no search prop -> Add button + bell + profile on the right */}
       <Topbar
         onMenu={openMenu}
-        search={search}
-        onSearch={v => { setSearch(v); setPage(1); }}
-        searchPlaceholder="Search resources…"
         actions={
           <Button size="sm" onClick={() => navigate('/recruiter/add')}>
             <FiPlus size={14} /> Add resource
@@ -72,6 +70,16 @@ export function RecruiterDashboard() {
             <p className="mt-1 text-sm text-slate-500">
               {mine.length} candidate{mine.length !== 1 ? 's' : ''} from {user?.companyName}
             </p>
+          </div>
+
+          {/* Search moved into the page body (super-admin style) */}
+          <div className="mb-5 rounded-2xl border border-slate-100 bg-white p-4 shadow-card">
+            <div className="relative max-w-md">
+              <FiSearch size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/>
+              <input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
+                placeholder="Search resources…" className="field pl-9 pr-8"/>
+              {search && <button onClick={() => { setSearch(''); setPage(1); }} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400"><FiX size={13}/></button>}
+            </div>
           </div>
 
           {pageItems.length === 0 ? (

@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion } from 'framer-motion';
-import { FiPlus, FiEdit2, FiTrash2, FiUser } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiX } from 'react-icons/fi';
 import { Topbar } from '@/shared/components/layout/Topbar';
 import { useShell } from '@/shared/components/layout/AppShell';
 import { PageTransition } from '@/shared/components/layout/PageTransition';
@@ -74,13 +74,24 @@ export function AdminRecruiters() {
 
   return (
     <>
-      <Topbar onMenu={openMenu} search={search} onSearch={setSearch} searchPlaceholder="Search recruiters…"
+      {/* Same as candidates: no search prop -> Add button + bell + profile sit on the right */}
+      <Topbar onMenu={openMenu}
         actions={<Button size="sm" onClick={openCreate}><FiPlus size={14}/>Add recruiter</Button>} />
       <main className="page">
         <PageTransition>
           <div className="mb-5">
             <h1 className="font-display text-2xl font-bold text-secondary">Recruiter management</h1>
             <p className="mt-1 text-sm text-slate-500">{recruiters.length} recruiters on the platform</p>
+          </div>
+
+          {/* Search moved into the page body (candidate style) */}
+          <div className="mb-5 rounded-2xl border border-slate-100 bg-white p-4 shadow-card">
+            <div className="relative max-w-md">
+              <FiSearch size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/>
+              <input value={search} onChange={e=>setSearch(e.target.value)}
+                placeholder="Search recruiters…" className="field pl-9 pr-8"/>
+              {search && <button onClick={()=>setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400"><FiX size={13}/></button>}
+            </div>
           </div>
 
           {filtered.length === 0 ? (

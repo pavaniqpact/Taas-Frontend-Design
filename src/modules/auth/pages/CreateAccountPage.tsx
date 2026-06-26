@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -8,6 +8,7 @@ import { registerSchema, type RegisterValues, passwordStrength } from '@/lib/val
 import { useAuth } from '@/store/auth';
 import { useToast } from '@/store/toast';
 import { Input, PasswordInput } from '@/shared/components/ui/Input';
+import { PhoneInput } from '@/shared/components/ui/PhoneInput';
 import { Button } from '@/shared/components/ui/Button';
 import { Logo } from '@/shared/components/ui/Logo';
 import { OtpModal } from '@/modules/auth/components/OtpModal';
@@ -22,7 +23,7 @@ export function CreateAccountPage() {
   const [otpOpen, setOtpOpen] = useState(false);
   const [email, setEmail]     = useState('');
 
-  const { register, handleSubmit, watch, formState: { errors, isSubmitting } } =
+  const { register, control, handleSubmit, watch, formState: { errors, isSubmitting } } =
     useForm<RegisterValues>({ resolver: zodResolver(registerSchema), mode: 'onChange' });
 
   const pw = watch('password') || '';
@@ -62,7 +63,25 @@ export function CreateAccountPage() {
             <Input label="First name"  placeholder="Jordan"     error={errors.firstName?.message}  {...register('firstName')} />
             <Input label="Last name"   placeholder="Hale"       error={errors.lastName?.message}   {...register('lastName')} />
             <Input label="Designation" placeholder="VP Engineering" error={errors.designation?.message} {...register('designation')} />
-            <Input label="Phone"       placeholder="+1 415 555 0142" error={errors.phone?.message} {...register('phone')} />
+
+            {/* Phone with country-code dropdown */}
+            <Controller
+              name="phone"
+              control={control}
+              defaultValue=""
+              render={({ field }) => (
+                <PhoneInput
+                  label="Phone"
+                  id="phone"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  error={errors.phone?.message}
+                  defaultCountry="US"
+                />
+              )}
+            />
+
             <Input label="Work email"  type="email" placeholder="you@company.com" error={errors.email?.message} {...register('email')} />
             <div>
               <PasswordInput label="Password" placeholder="••••••••" error={errors.password?.message} {...register('password')} />
