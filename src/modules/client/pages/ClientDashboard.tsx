@@ -23,7 +23,7 @@ export function ClientDashboard() {
   const { candidates }            = useResources();
   const { add, has, ids }         = useCart();   // ids = Set<string> of shortlisted IDs
   const { user }                  = useAuth();
-  const { addDemand, isInDemandByOther } = useDemand();
+  const { addDemand, demandedByOthers } = useDemand();
   const { push }                  = useToast();
 
   const [search, setSearch]   = useState('');
@@ -193,7 +193,7 @@ export function ClientDashboard() {
                   inCart={has(c.id)}
                   onAdd={handleAdd}
                   index={i}
-                  inDemand={isInDemandByOther(c.id, user?.id ?? '')}
+                  inDemand={demandedByOthers(c.id, user?.id ?? '')}
                   docMode="client"
                 />
               ))}

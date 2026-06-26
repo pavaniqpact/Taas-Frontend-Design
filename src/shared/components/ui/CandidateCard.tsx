@@ -57,6 +57,15 @@ export function CandidateCard({
     >
       {/* ── Top ── */}
       <div className="flex flex-col items-center pt-6 pb-4 px-5 border-b border-slate-50">
+        {inDemand && (
+          <motion.span
+            initial={{ opacity: 0, scale: 0.7 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="mb-2 inline-flex items-center gap-1 rounded-full bg-orange-50 px-2.5 py-0.5 text-xs font-semibold text-orange-600 border border-orange-200"
+          >
+            🔥 On demand
+          </motion.span>
+        )}
         <div className="relative mb-3">
           <CandidateAvatar gender={c.gender} id={c.id} size="md" />
           <span className="absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full bg-success text-white ring-2 ring-white" title="Pre-vetted by Qpact">
