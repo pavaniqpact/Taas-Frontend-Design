@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { FiSearch, FiX } from 'react-icons/fi';
 import { Topbar } from '@/shared/components/layout/Topbar';
 import { useShell } from '@/shared/components/layout/AppShell';
 import { PageTransition } from '@/shared/components/layout/PageTransition';
@@ -16,12 +17,23 @@ export function AdminClients() {
 
   return (
     <>
-      <Topbar onMenu={openMenu} search={search} onSearch={setSearch} searchPlaceholder="Search clients…"/>
+      {/* Same as candidates: no search prop -> bell + profile sit on the right */}
+      <Topbar onMenu={openMenu} />
       <main className="page">
         <PageTransition>
           <div className="mb-5">
             <h1 className="font-display text-2xl font-bold text-secondary">Client management</h1>
             <p className="mt-1 text-sm text-slate-500">{clients.length} registered clients</p>
+          </div>
+
+          {/* Search moved into the page body (candidate style) */}
+          <div className="mb-5 rounded-2xl border border-slate-100 bg-white p-4 shadow-card">
+            <div className="relative max-w-md">
+              <FiSearch size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/>
+              <input value={search} onChange={e=>setSearch(e.target.value)}
+                placeholder="Search clients…" className="field pl-9 pr-8"/>
+              {search && <button onClick={()=>setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400"><FiX size={13}/></button>}
+            </div>
           </div>
 
           {filtered.length === 0 ? (

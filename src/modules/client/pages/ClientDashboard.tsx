@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { FiFilter, FiX } from 'react-icons/fi';
+import { FiFilter, FiX, FiSearch } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Topbar } from '@/shared/components/layout/Topbar';
 import { useShell } from '@/shared/components/layout/AppShell';
@@ -79,12 +79,8 @@ export function ClientDashboard() {
 
   return (
     <>
-      <Topbar
-        onMenu={openMenu}
-        search={search}
-        onSearch={v => { setSearch(v); setPage(1); }}
-        searchPlaceholder="Search by name, skill or technology…"
-      />
+      {/* Same as super admin: no search prop -> cart + bell + profile on the right */}
+      <Topbar onMenu={openMenu} />
       <main className="page">
         <PageTransition>
           {/* Header */}
@@ -105,7 +101,17 @@ export function ClientDashboard() {
             </Button>
           </div>
 
-          {/* Filter panel */}
+          {/* Search moved into the page body (super-admin style) */}
+          <div className="mb-5 rounded-2xl border border-slate-100 bg-white p-4 shadow-card">
+            <div className="relative max-w-md">
+              <FiSearch size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/>
+              <input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
+                placeholder="Search by name, skill or technology…" className="field pl-9 pr-8"/>
+              {search && <button onClick={() => { setSearch(''); setPage(1); }} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400"><FiX size={13}/></button>}
+            </div>
+          </div>
+
+          {/* Filter panel (collapsible) */}
           <AnimatePresence>
             {filterOpen && (
               <motion.div
