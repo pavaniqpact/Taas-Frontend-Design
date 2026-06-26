@@ -6,26 +6,11 @@
  * matching the reference image (suit + tie for male, bob hair + blouse for female).
  */
 
-// ── Colour palette ──────────────────────────────────────────────────────────
-const COLOURS = [
-  '#2563EB', // blue
-  '#7C3AED', // violet
-  '#DB2777', // pink
-  '#059669', // emerald
-  '#D97706', // amber
-  '#DC2626', // red
-  '#0891B2', // cyan
-  '#9333EA', // purple
-  '#EA580C', // orange
-  '#0F766E', // teal
-  '#BE185D', // rose
-  '#1D4ED8', // indigo
-];
+// ── Single unified avatar background colour ──────────────────────────────────
+const AVATAR_BG = '#2C3E6B'; // deep navy-indigo — professional, neutral, suits all profiles
 
-function pickColour(id: string): string {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) & 0xffff;
-  return COLOURS[h % COLOURS.length];
+function pickColour(_id: string): string {
+  return AVATAR_BG;
 }
 
 // ── Male silhouette — business suit with tie ────────────────────────────────

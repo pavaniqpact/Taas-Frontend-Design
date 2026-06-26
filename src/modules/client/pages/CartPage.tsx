@@ -115,7 +115,7 @@ export function CartPage() {
                 <div className="card p-6">
                   <h2 className="font-display font-bold text-secondary mb-4">Summary</h2>
                   <dl className="space-y-2.5 text-sm">
-                    {[['Profiles', count],['Avg. rate', formatRate(avgRate)],['Available',items.filter(c=>c.availability==='Available').length]].map(([l,v]) => (
+                    {[['Profiles', count],['Avg. rate', formatRate(avgRate)]].map(([l,v]) => (
                       <div key={String(l)} className="flex justify-between">
                         <dt className="text-slate-500">{l}</dt>
                         <dd className="font-semibold text-secondary">{v}</dd>

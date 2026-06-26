@@ -4,12 +4,19 @@ import { FiSearch, FiX } from 'react-icons/fi';
 import { Topbar } from '@/shared/components/layout/Topbar';
 import { useShell } from '@/shared/components/layout/AppShell';
 import { PageTransition } from '@/shared/components/layout/PageTransition';
-import { seedUsers } from '@/lib/mockData';
+import { getGlobalRegistry } from '@/store/auth';
 
 export function AdminClients() {
   const { openMenu } = useShell();
   const [search, setSearch] = useState('');
-  const clients = seedUsers.filter(u => u.role === 'client');
+  const [, setTick] = useState(0);
+  // Re-read registry on every render tick so new registrations appear live
+  const clients = getGlobalRegistry().filter(u => u.role === 'client');
+  // Poll for changes every 2s (simple approach for demo without websockets)
+  useState(() => {
+    const id = setInterval(() => setTick(t => t + 1), 2000);
+    return () => clearInterval(id);
+  });
   const filtered = clients.filter(c => {
     const q = search.toLowerCase();
     return !q || c.firstName.toLowerCase().includes(q) || c.lastName.toLowerCase().includes(q) || c.email.toLowerCase().includes(q) || c.companyName.toLowerCase().includes(q);

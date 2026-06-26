@@ -57,27 +57,23 @@ export function CandidateCard({
     >
       {/* ── Top ── */}
       <div className="flex flex-col items-center pt-6 pb-4 px-5 border-b border-slate-50">
-        {inDemand && (
-          <motion.span
-            initial={{ opacity: 0, scale: 0.7 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="mb-2 inline-flex items-center gap-1 rounded-full bg-orange-50 px-2.5 py-0.5 text-xs font-semibold text-orange-600 border border-orange-200"
-          >
-            🔥 Demand
-          </motion.span>
-        )}
         <div className="relative mb-3">
           <CandidateAvatar gender={c.gender} id={c.id} size="md" />
           <span className="absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full bg-success text-white ring-2 ring-white" title="Pre-vetted by Qpact">
             <FiCheck size={14} />
           </span>
         </div>
+
+        {/* ✅ Name first */}
         <h3 className="font-display text-base font-bold text-secondary text-center leading-tight">{c.name}</h3>
+
+        {/* ✅ Gender shown right below name */}
+        <span className={`mt-1.5 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold border ${isFemale ? 'bg-pink-50 text-pink-600 border-pink-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
+          {isFemale ? '♀ Female' : '♂ Male'}
+        </span>
+
         <div className="mt-1.5 flex flex-wrap justify-center items-center gap-1.5">
           <TechBadge>{c.technology}</TechBadge>
-          <span className={`chip text-[11px] font-semibold ${isFemale ? 'bg-pink-50 text-pink-600 border border-pink-100' : 'bg-blue-50 text-blue-600 border border-blue-100'}`}>
-            {isFemale ? '♀ Female' : '♂ Male'}
-          </span>
         </div>
       </div>
 
@@ -125,6 +121,11 @@ export function CandidateCard({
             {onEdit   && <Button size="sm" variant="outline" fullWidth onClick={onEdit}><FiEdit2 size={13} /> Edit</Button>}
             {onDelete && <Button size="sm" variant="danger"  fullWidth onClick={onDelete}>Delete</Button>}
           </>
+        ) : inDemand ? (
+          <div className="w-full rounded-xl border border-orange-200 bg-orange-50 px-3 py-2.5 text-center">
+            <p className="text-xs font-bold text-orange-600">🔥 On Demand</p>
+            <p className="mt-0.5 text-[10px] text-orange-500">Currently shortlisted by another client</p>
+          </div>
         ) : (
           <Button size="sm" variant={inCart ? 'secondary' : 'primary'} fullWidth onClick={() => onAdd(c)} disabled={inCart}>
             {inCart ? <><FiCheck size={13} /> Added</> : <><FiPlus size={13} /> Shortlist</>}

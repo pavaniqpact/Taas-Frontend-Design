@@ -23,7 +23,7 @@ export function ClientDashboard() {
   const { candidates }            = useResources();
   const { add, has, ids }         = useCart();   // ids = Set<string> of shortlisted IDs
   const { user }                  = useAuth();
-  const { addDemand, isInDemand } = useDemand();
+  const { addDemand, isInDemandByOther } = useDemand();
   const { push }                  = useToast();
 
   const [search, setSearch]   = useState('');
@@ -45,7 +45,7 @@ export function ClientDashboard() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return candidates.filter(c => {
-      // ── KEY: hide candidates this client has already shortlisted ──
+      // Hide only candidates THIS client has already shortlisted
       if (ids.has(c.id)) return false;
 
       const matchQ =
@@ -63,7 +63,6 @@ export function ClientDashboard() {
       );
     });
   }, [candidates, search, tech, skill, minExp, maxRate, ids]);
-  // `ids` is a new Set reference whenever the cart changes → correctly triggers re-filter
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safe       = Math.min(page, totalPages);
@@ -194,7 +193,7 @@ export function ClientDashboard() {
                   inCart={has(c.id)}
                   onAdd={handleAdd}
                   index={i}
-                  inDemand={isInDemand(c.id)}
+                  inDemand={isInDemandByOther(c.id, user?.id ?? '')}
                   docMode="client"
                 />
               ))}

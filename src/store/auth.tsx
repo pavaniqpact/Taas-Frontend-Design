@@ -3,6 +3,22 @@ import type { AuthUser, RegisterInput, Role, User } from '@/types';
 import { seedUsers } from '@/lib/mockData';
 import { delay } from '@/lib/utils';
 
+// ── Global registry — shared across all provider instances in the same tab ──
+// This means admin-added recruiters and self-registered clients are instantly
+// visible to login and to admin dashboards.
+const _globalRegistry: User[] = [...seedUsers];
+
+export function getGlobalRegistry(): User[] { return _globalRegistry; }
+export function pushToRegistry(u: User)     { _globalRegistry.push(u); }
+export function updateInRegistry(id: string, patch: Partial<User>) {
+  const idx = _globalRegistry.findIndex(u => u.id === id);
+  if (idx !== -1) Object.assign(_globalRegistry[idx], patch);
+}
+export function removeFromRegistry(id: string) {
+  const idx = _globalRegistry.findIndex(u => u.id === id);
+  if (idx !== -1) _globalRegistry.splice(idx, 1);
+}
+
 interface AuthCtx {
   user: AuthUser | null;
   login(email: string, password: string, role: Role): Promise<AuthUser>;
@@ -14,10 +30,13 @@ interface AuthCtx {
 const AuthContext = createContext<AuthCtx | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const registry = useRef<User[]>([...seedUsers]);
-  const pending  = useRef<User | null>(null);
-  const [user, setUser]               = useState<AuthUser | null>(() => {
-    try { const s = sessionStorage.getItem('qpact.session'); return s ? JSON.parse(s) : null; } catch { return null; }
+  const pending = useRef<User | null>(null);
+
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    try {
+      const s = sessionStorage.getItem('qpact.session');
+      return s ? JSON.parse(s) : null;
+    } catch { return null; }
   });
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
 
@@ -29,8 +48,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function login(email: string, password: string, role: Role): Promise<AuthUser> {
     await delay(700);
-    const f = registry.current.find(
-      u => u.email.toLowerCase() === email.toLowerCase() && u.password === password && u.role === role,
+    const f = _globalRegistry.find(
+      u => u.email.toLowerCase() === email.toLowerCase() &&
+           u.password === password &&
+           u.role === role,
     );
     if (!f) throw new Error(`No ${role} account matches those credentials.`);
     const { password: _, ...safe } = f;
@@ -40,23 +61,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function register(input: RegisterInput): Promise<void> {
     await delay(800);
-    if (registry.current.some(u => u.email.toLowerCase() === input.email.toLowerCase()))
+    if (_globalRegistry.some(u => u.email.toLowerCase() === input.email.toLowerCase()))
       throw new Error('Account already exists with this email.');
-    pending.current = { id: `usr-${Math.random().toString(36).slice(2,8)}`, role: 'client', ...input };
+    pending.current = {
+      id: `usr-${Math.random().toString(36).slice(2,8)}`,
+      role: 'client',
+      ...input,
+    };
     setPendingEmail(input.email);
   }
 
   async function confirmOtp(code: string): Promise<AuthUser> {
     await delay(600);
     if (!/^\d{6}$/.test(code)) throw new Error('Enter a 6-digit code.');
-    if (code === '000000') throw new Error('Incorrect code. Try again.');
-    if (!pending.current) throw new Error('No pending registration.');
-    // Register the account in the registry
-    registry.current = [...registry.current, pending.current];
+    if (code === '000000')     throw new Error('Incorrect code. Try again.');
+    if (!pending.current)      throw new Error('No pending registration.');
+    // ── Push into global registry so admin sees it immediately ──
+    pushToRegistry(pending.current);
     const { password: _, ...safe } = pending.current;
     pending.current = null;
     setPendingEmail(null);
-    // Do NOT call persist() — user must explicitly log in with their new credentials
     return safe;
   }
 
