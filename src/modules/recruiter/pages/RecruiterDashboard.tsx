@@ -98,6 +98,7 @@ export function RecruiterDashboard() {
                   onAdd={() => {}}
                   index={i}
                   recruiterView
+                  docMode="recruiter"
                   onEdit={() => navigate(`/recruiter/edit/${c.id}`)}
                   onDelete={() => setToDelete(c)}
                 />

@@ -16,17 +16,22 @@ export interface Candidate {
   photo: string;
   gender: 'male' | 'female';
   technology: Technology;
-  experience: number;       // years
+  experience: number;
   skills: string[];
   summary: string;
-  ratePerHour: number;      // USD/hr
+  ratePerHour: number;
   availability: Availability;
   status: ResourceStatus;
-  createdAt: string;        // ISO
+  createdAt: string;
   documents: {
     resume: boolean;
     evaluationReport: boolean;
     backgroundReport: boolean;
+  };
+  documentUrls?: {
+    resume?: string;
+    evaluationReport?: string;
+    backgroundReport?: string;
   };
 }
 

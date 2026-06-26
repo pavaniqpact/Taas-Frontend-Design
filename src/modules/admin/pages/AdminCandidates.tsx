@@ -69,7 +69,6 @@ export function AdminCandidates() {
             <p className="mt-1 text-sm text-slate-500">{candidates.length} total candidates on the platform</p>
           </div>
 
-          {/* Filters */}
           <div className="mb-5 rounded-2xl border border-slate-100 bg-white p-4 shadow-card">
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
               <div className="relative lg:col-span-1">
