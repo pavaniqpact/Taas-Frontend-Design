@@ -82,7 +82,9 @@ export function CreateAccountPage() {
               )}
             />
 
-            <Input label="Work email"  type="email" placeholder="you@company.com" error={errors.email?.message} {...register('email')} />
+            {/* ── Changed from "Work email" to "Official Email" ── */}
+            <Input label="Official Email" type="email" placeholder="you@company.com" error={errors.email?.message} {...register('email')} />
+
             <div>
               <PasswordInput label="Password" placeholder="••••••••" error={errors.password?.message} {...register('password')} />
               {pw && (
