@@ -57,15 +57,14 @@ export function CandidateCard({
     >
       {/* ── Top ── */}
       <div className="flex flex-col items-center pt-6 pb-4 px-5 border-b border-slate-50">
+
+        {/* ✅ On Demand badge — TOP ONLY */}
         {inDemand && (
-          <motion.span
-            initial={{ opacity: 0, scale: 0.7 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="mb-2 inline-flex items-center gap-1 rounded-full bg-orange-50 px-2.5 py-0.5 text-xs font-semibold text-orange-600 border border-orange-200"
-          >
+          <span className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-bold text-orange-600">
             🔥 On demand
-          </motion.span>
+          </span>
         )}
+
         <div className="relative mb-3">
           <CandidateAvatar gender={c.gender} id={c.id} size="md" />
           <span className="absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full bg-success text-white ring-2 ring-white" title="Pre-vetted by Qpact">
@@ -73,10 +72,10 @@ export function CandidateCard({
           </span>
         </div>
 
-        {/* ✅ Name first */}
+        {/* Name */}
         <h3 className="font-display text-base font-bold text-secondary text-center leading-tight">{c.name}</h3>
 
-        {/* ✅ Gender shown right below name */}
+        {/* Gender — shown right below name */}
         <span className={`mt-1.5 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold border ${isFemale ? 'bg-pink-50 text-pink-600 border-pink-100' : 'bg-blue-50 text-blue-600 border-blue-100'}`}>
           {isFemale ? '♀ Female' : '♂ Male'}
         </span>
@@ -106,7 +105,7 @@ export function CandidateCard({
           </div>
         )}
 
-        {/* Documents — horizontal chips, click opens popup */}
+        {/* Documents */}
         <div>
           <p className="text-xs font-medium text-slate-400 mb-1.5">Documents</p>
           <div className="flex gap-2">
@@ -123,18 +122,13 @@ export function CandidateCard({
         </div>
       </div>
 
-      {/* ── Actions ── */}
+      {/* ── Actions — NO On Demand here, only Shortlist or Edit/Delete ── */}
       <div className="mt-auto border-t border-slate-50 px-5 py-3 flex gap-2">
         {recruiterView ? (
           <>
             {onEdit   && <Button size="sm" variant="outline" fullWidth onClick={onEdit}><FiEdit2 size={13} /> Edit</Button>}
             {onDelete && <Button size="sm" variant="danger"  fullWidth onClick={onDelete}>Delete</Button>}
           </>
-        ) : inDemand ? (
-          <div className="w-full rounded-xl border border-orange-200 bg-orange-50 px-3 py-2.5 text-center">
-            <p className="text-xs font-bold text-orange-600">🔥 On Demand</p>
-            <p className="mt-0.5 text-[10px] text-orange-500">Currently shortlisted by another client</p>
-          </div>
         ) : (
           <Button size="sm" variant={inCart ? 'secondary' : 'primary'} fullWidth onClick={() => onAdd(c)} disabled={inCart}>
             {inCart ? <><FiCheck size={13} /> Added</> : <><FiPlus size={13} /> Shortlist</>}
@@ -160,7 +154,6 @@ export function CandidateCard({
                 <p className="text-sm font-semibold text-secondary">{activeDoc.label}</p>
               </div>
               <div className={`grid gap-2 ${docMode === 'recruiter' ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                {/* View — recruiter only */}
                 {docMode === 'recruiter' && (
                   <button onClick={() => {
                     const url = c.documentUrls?.[activeDoc.key as keyof typeof c.documentUrls];
@@ -171,7 +164,6 @@ export function CandidateCard({
                     <FiEye size={14} /> View
                   </button>
                 )}
-                {/* Download — both roles */}
                 <button onClick={() => {
                   const url = c.documentUrls?.[activeDoc.key as keyof typeof c.documentUrls];
                   if (url) {
