@@ -23,6 +23,8 @@ interface Props {
   recruiterView?: boolean;
   onEdit?(): void;
   onDelete?(): void;
+  cartView?: boolean;
+  onRemove?(): void;
 }
 
 export function CandidateCard({
@@ -35,6 +37,8 @@ export function CandidateCard({
   recruiterView,
   onEdit,
   onDelete,
+  cartView,
+  onRemove,
 }: Props) {
   const { push } = useToast();
   const [activeDoc, setActiveDoc] = useState<{ label: string; icon: JSX.Element; key: string } | null>(null);
@@ -129,6 +133,10 @@ export function CandidateCard({
             {onEdit   && <Button size="sm" variant="outline" fullWidth onClick={onEdit}><FiEdit2 size={13} /> Edit</Button>}
             {onDelete && <Button size="sm" variant="danger"  fullWidth onClick={onDelete}>Delete</Button>}
           </>
+        ) : cartView ? (
+          <Button size="sm" variant="danger" fullWidth onClick={() => onRemove?.()}>
+            <FiTrash2 size={13} /> Remove from shortlist
+          </Button>
         ) : (
           <Button size="sm" variant={inCart ? 'secondary' : 'primary'} fullWidth onClick={() => onAdd(c)} disabled={inCart}>
             {inCart ? <><FiCheck size={13} /> Added</> : <><FiPlus size={13} /> Shortlist</>}

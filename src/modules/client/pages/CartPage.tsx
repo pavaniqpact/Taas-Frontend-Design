@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiTrash2, FiArrowLeft, FiSend, FiShoppingCart, FiBriefcase } from 'react-icons/fi';
+import { FiArrowLeft, FiSend, FiShoppingCart } from 'react-icons/fi';
 import { Topbar } from '@/shared/components/layout/Topbar';
 import { useShell } from '@/shared/components/layout/AppShell';
 import { PageTransition } from '@/shared/components/layout/PageTransition';
@@ -11,8 +11,7 @@ import { Button } from '@/shared/components/ui/Button';
 import { Modal } from '@/shared/components/ui/Modal';
 import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog';
 import { Input } from '@/shared/components/ui/Input';
-import { TechBadge } from '@/shared/components/ui/Badge';
-import { CandidateAvatar } from '@/shared/components/ui/CandidateAvatar';
+import { CandidateCard } from '@/shared/components/ui/CandidateCard';
 import { useCart } from '@/store/cart';
 import { useAuth } from '@/store/auth';
 import { useToast } from '@/store/toast';
@@ -87,27 +86,25 @@ export function CartPage() {
             </div>
           ) : (
             <div className="grid gap-6 lg:grid-cols-3">
-              <div className="lg:col-span-2 space-y-3">
-                <AnimatePresence>
-                  {items.map(c => (
-                    <motion.div key={c.id} initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }}
-                      exit={{ opacity:0, x:-20 }} className="card flex items-center gap-4 p-4">
-                      <CandidateAvatar gender={c.gender} id={c.id} size="sm" className="ring-2 ring-white shadow-sm" />
-                      <div className="min-w-0 flex-1">
-                        <p className="font-display font-bold text-secondary truncate">{c.name}</p>
-                        <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-slate-500">
-                          <TechBadge>{c.technology}</TechBadge>
-                          <span className="inline-flex items-center gap-1"><FiBriefcase size={12}/>{c.experience} yrs</span>
-                        </div>
-                      </div>
-                      <p className="font-semibold text-secondary shrink-0">{formatRate(c.ratePerHour)}</p>
-                      <button onClick={() => setToRemove(c)} aria-label={`Remove ${c.name}`}
-                        className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-slate-400 hover:bg-danger/10 hover:text-danger transition">
-                        <FiTrash2 size={16}/>
-                      </button>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
+              <div className="lg:col-span-2">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+                  <AnimatePresence>
+                    {items.map((c, i) => (
+                      <motion.div key={c.id} initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }}
+                        exit={{ opacity:0, x:-20 }}>
+                        <CandidateCard
+                          candidate={c}
+                          index={i}
+                          inCart
+                          onAdd={() => {}}
+                          docMode="client"
+                          cartView
+                          onRemove={() => setToRemove(c)}
+                        />
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
               </div>
 
               {/* Summary sidebar */}
