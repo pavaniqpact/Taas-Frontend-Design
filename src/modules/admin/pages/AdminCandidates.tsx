@@ -1,181 +1,266 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FiPlus, FiEdit2, FiTrash2, FiEye, FiSearch, FiX } from 'react-icons/fi';
-import { motion } from 'framer-motion';
+import { FiPlus, FiEdit2, FiTrash2, FiFilter, FiSearch, FiX } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Topbar } from '@/shared/components/layout/Topbar';
 import { useShell } from '@/shared/components/layout/AppShell';
 import { PageTransition } from '@/shared/components/layout/PageTransition';
 import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog';
-import { Modal } from '@/shared/components/ui/Modal';
 import { Button } from '@/shared/components/ui/Button';
 import { Pagination } from '@/shared/components/ui/Pagination';
-import { SkillTag, TechBadge } from '@/shared/components/ui/Badge';
-import { CandidateAvatar } from '@/shared/components/ui/CandidateAvatar';
+import { CandidateCard } from '@/shared/components/ui/CandidateCard';
 import { useResources } from '@/store/resources';
 import { useToast } from '@/store/toast';
 import { TECHNOLOGIES, PAGE_SIZE, SKILLS_BY_TECH } from '@/constants';
-import { formatRate, formatDate } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import type { Candidate } from '@/types';
 
 const ALL_SKILLS = [...new Set(Object.values(SKILLS_BY_TECH).flat())].sort();
 
 export function AdminCandidates() {
-  const navigate     = useNavigate();
-  const { openMenu } = useShell();
-  const { candidates, remove } = useResources();
-  const { push }     = useToast();
+  const navigate     = useNavigate();
+  const { openMenu } = useShell();
+  const { candidates, remove } = useResources();
+  const { push }     = useToast();
 
-  const [search, setSearch]   = useState('');
-  const [tech, setTech]       = useState('All');
-  const [skill, setSkill]     = useState('All');
-  const [minExp, setMinExp]   = useState(0);
-  const [maxRate, setMaxRate] = useState(150);
-  const [page, setPage]       = useState(1);
-  const [toDelete, setToDelete] = useState<Candidate | null>(null);
-  const [deleting, setDeleting] = useState(false);
-  const [viewing, setViewing]   = useState<Candidate | null>(null);
+  const [search, setSearch]         = useState('');
+  const [tech, setTech]             = useState('All');
+  const [otherTech, setOtherTech]   = useState('');
+  const [skills, setSkills]         = useState<string[]>([]);
+  const [otherSkill, setOtherSkill] = useState('');
+  const [minExp, setMinExp]         = useState(0);
+  const [maxRate, setMaxRate]       = useState(150);
+  const [page, setPage]             = useState(1);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [toDelete, setToDelete]     = useState<Candidate | null>(null);
+  const [deleting, setDeleting]     = useState(false);
 
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase();
-    return candidates.filter(c =>
-      (!q || c.name.toLowerCase().includes(q) || c.technology.toLowerCase().includes(q) || c.skills.some(s=>s.toLowerCase().includes(q))) &&
-      (tech==='All'||c.technology===tech) && (skill==='All'||c.skills.includes(skill)) && c.experience>=minExp && c.ratePerHour<=maxRate
-    );
-  }, [candidates, search, tech, skill, minExp, maxRate]);
+  const toggleSkill = (s: string) =>
+    setSkills(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length/PAGE_SIZE));
-  const safe       = Math.min(page, totalPages);
-  const pageItems  = filtered.slice((safe-1)*PAGE_SIZE, safe*PAGE_SIZE);
+  const effectiveTech   = tech === 'Others' ? otherTech.trim() : tech;
+  const extraSkills     = otherSkill.trim() ? [otherSkill.trim()] : [];
+  const allActiveSkills = [...skills, ...extraSkills];
 
-  const resetFilters = () => { setSearch(''); setTech('All'); setSkill('All'); setMinExp(0); setMaxRate(150); setPage(1); };
+  const resetFilters = () => {
+    setSearch(''); setTech('All'); setOtherTech('');
+    setSkills([]); setOtherSkill('');
+    setMinExp(0); setMaxRate(150); setPage(1);
+  };
 
-  async function confirmDelete() {
-    if (!toDelete) return;
-    setDeleting(true);
-    await remove(toDelete.id);
-    setDeleting(false);
-    push({ type:'success', title:'Candidate deleted', description:`${toDelete.name} removed.` });
-    setToDelete(null);
-  }
+  const activeFilters =
+    (tech !== 'All' ? 1 : 0) +
+    (allActiveSkills.length > 0 ? 1 : 0) +
+    (minExp > 0 ? 1 : 0) +
+    (maxRate < 150 ? 1 : 0);
 
-  return (
-    <>
-      <Topbar onMenu={openMenu}
-        actions={<Button size="sm" onClick={() => navigate('/admin/candidates/add')}><FiPlus size={14}/>Add candidate</Button>} />
-      <main className="page">
-        <PageTransition>
-          <div className="mb-5">
-            <h1 className="font-display text-2xl font-bold text-secondary">Candidate management</h1>
-            <p className="mt-1 text-sm text-slate-500">{candidates.length} total candidates on the platform</p>
-          </div>
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase();
+    return candidates.filter(c =>
+      (!q || c.name.toLowerCase().includes(q) || c.technology.toLowerCase().includes(q) || c.skills.some(s => s.toLowerCase().includes(q))) &&
+      (!effectiveTech || effectiveTech === 'All' || c.technology === effectiveTech) &&
+      (allActiveSkills.length === 0 || allActiveSkills.some(s => c.skills.includes(s))) &&
+      c.experience >= minExp && c.ratePerHour <= maxRate
+    );
+  }, [candidates, search, effectiveTech, allActiveSkills.join(','), minExp, maxRate]);
 
-          <div className="mb-5 rounded-2xl border border-slate-100 bg-white p-4 shadow-card">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-              <div className="relative lg:col-span-1">
-                <FiSearch size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/>
-                <input value={search} onChange={e=>{setSearch(e.target.value);setPage(1);}}
-                  placeholder="Search…" className="field pl-9 pr-8"/>
-                {search && <button onClick={()=>{setSearch('');setPage(1);}} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400"><FiX size={13}/></button>}
-              </div>
-              <select className="field" value={tech} onChange={e=>{setTech(e.target.value);setPage(1);}}>
-                <option value="All">All technologies</option>
-                {TECHNOLOGIES.map(t=><option key={t}>{t}</option>)}
-              </select>
-              <select className="field" value={skill} onChange={e=>{setSkill(e.target.value);setPage(1);}}>
-                <option value="All">All skills</option>
-                {ALL_SKILLS.map(s=><option key={s}>{s}</option>)}
-              </select>
-              <div>
-                <input type="range" min={0} max={14} value={minExp} onChange={e=>{setMinExp(+e.target.value);setPage(1);}}
-                  className="w-full" style={{accentColor:'#2563EB'}}/>
-                <p className="text-xs text-slate-500 mt-1">Min exp: <b>{minExp} yrs</b></p>
-              </div>
-              <div>
-                <input type="range" min={25} max={150} value={maxRate} onChange={e=>{setMaxRate(+e.target.value);setPage(1);}}
-                  className="w-full" style={{accentColor:'#2563EB'}}/>
-                <p className="text-xs text-slate-500 mt-1">Max rate: <b>${maxRate}/hr</b></p>
-              </div>
-            </div>
-          </div>
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safe       = Math.min(page, totalPages);
+  const pageItems  = filtered.slice((safe - 1) * PAGE_SIZE, safe * PAGE_SIZE);
 
-          <p className="mb-3 text-sm text-slate-500"><span className="font-semibold text-secondary">{filtered.length}</span> candidates match</p>
+  async function confirmDelete() {
+    if (!toDelete) return;
+    setDeleting(true);
+    await remove(toDelete.id);
+    setDeleting(false);
+    push({ type: 'success', title: 'Candidate deleted', description: `${toDelete.name} removed.` });
+    setToDelete(null);
+  }
 
-          {pageItems.length === 0 ? (
-            <div className="grid place-items-center rounded-2xl border border-dashed border-slate-200 py-20 text-center">
-              <p className="font-display text-lg font-bold text-secondary">No candidates found</p>
-              <Button variant="outline" className="mt-4" onClick={resetFilters}>Clear filters</Button>
-            </div>
-          ) : (
-            <div className="card overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[840px] text-sm">
-                  <thead>
-                    <tr className="border-b border-slate-100 text-left text-xs uppercase tracking-wider text-slate-400">
-                      {['Candidate','Technology','Experience','Rate','Created',''].map(h=>(
-                        <th key={h} className="px-5 py-3 font-semibold">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {pageItems.map(c => (
-                      <motion.tr key={c.id} initial={{opacity:0}} animate={{opacity:1}} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/60">
-                        <td className="px-5 py-3">
-                          <div className="flex items-center gap-3">
-                            <CandidateAvatar gender={c.gender} id={c.id} size="xs" />
-                            <div>
-                              <p className="font-medium text-secondary">{c.name}</p>
-                              <p className="text-xs text-slate-400">{c.recruiterId}</p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-5 py-3"><TechBadge>{c.technology}</TechBadge></td>
-                        <td className="px-5 py-3 text-slate-600">{c.experience} yrs</td>
-                        <td className="px-5 py-3 font-semibold text-secondary">{formatRate(c.ratePerHour)}</td>
-                        <td className="px-5 py-3 text-slate-500">{formatDate(c.createdAt)}</td>
-                        <td className="px-5 py-3">
-                          <div className="flex items-center gap-1">
-                            <button onClick={()=>setViewing(c)} title="View" className="grid h-9 w-9 place-items-center rounded-lg text-slate-500 hover:bg-primary-50 hover:text-primary transition"><FiEye size={15}/></button>
-                            <button onClick={()=>navigate(`/admin/candidates/edit/${c.id}`)} title="Edit" className="grid h-9 w-9 place-items-center rounded-lg text-slate-500 hover:bg-primary-50 hover:text-primary transition"><FiEdit2 size={15}/></button>
-                            <button onClick={()=>setToDelete(c)} title="Delete" className="grid h-9 w-9 place-items-center rounded-lg text-slate-500 hover:bg-danger/10 hover:text-danger transition"><FiTrash2 size={15}/></button>
-                          </div>
-                        </td>
-                      </motion.tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
+  return (
+    <>
+      <Topbar
+        onMenu={openMenu}
+        actions={<Button size="sm" onClick={() => navigate('/admin/candidates/add')}><FiPlus size={14} />Add candidate</Button>}
+      />
+      <main className="page">
+        <PageTransition>
 
-          <Pagination page={safe} totalPages={totalPages} onPrev={()=>setPage(p=>p-1)} onNext={()=>setPage(p=>p+1)} onPage={setPage}/>
-        </PageTransition>
-      </main>
+          {/* Header */}
+          <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h1 className="font-display text-2xl font-bold text-secondary">Candidate management</h1>
+              <p className="mt-1 text-sm text-slate-500">
+                {filtered.length} profiles available · {candidates.length} total
+              </p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => setFilterOpen(v => !v)}>
+              <FiFilter size={14} /> Filters
+              {activeFilters > 0 && (
+                <span className="ml-1 rounded-full bg-primary px-1.5 py-0.5 text-[10px] text-white">
+                  {activeFilters}
+                </span>
+              )}
+            </Button>
+          </div>
 
-      <Modal open={!!viewing} onClose={()=>setViewing(null)} title={viewing?.name} description={viewing?.technology}>
-        {viewing && <div className="space-y-4">
-          <div className="flex items-center gap-4">
-            <CandidateAvatar gender={viewing.gender} id={viewing.id} size="sm" className="ring-2 ring-white shadow" />
-            <div>
-              <p className="font-display font-bold text-secondary">{viewing.name}</p>
-              <p className="text-sm text-slate-500">{viewing.technology}</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            {[['Experience',`${viewing.experience} yrs`],['Rate',formatRate(viewing.ratePerHour)],['Recruiter',viewing.recruiterId],['Created',formatDate(viewing.createdAt)]].map(([l,v])=>(
-              <div key={l} className="rounded-xl bg-slate-50 px-3 py-2"><p className="text-xs text-slate-400">{l}</p><p className="font-medium text-secondary">{v}</p></div>
-            ))}
-          </div>
-          <div><p className="label">Skills</p><div className="flex flex-wrap gap-1.5">{viewing.skills.map(s=><SkillTag key={s}>{s}</SkillTag>)}</div></div>
-          <p className="text-sm text-slate-600">{viewing.summary}</p>
-          <div className="flex gap-3 pt-1">
-            <Button variant="outline" fullWidth onClick={()=>setViewing(null)}>Close</Button>
-            <Button fullWidth onClick={()=>{navigate(`/admin/candidates/edit/${viewing.id}`);setViewing(null);}}>Edit</Button>
-          </div>
-        </div>}
-      </Modal>
+          {/* Search */}
+          <div className="mb-5 rounded-2xl border border-slate-100 bg-white p-4 shadow-card">
+            <div className="relative max-w-md">
+              <FiSearch size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
+                placeholder="Search by name, skill or technology…" className="field pl-9 pr-8" />
+              {search && (
+                <button onClick={() => { setSearch(''); setPage(1); }} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400">
+                  <FiX size={13} />
+                </button>
+              )}
+            </div>
+          </div>
 
-      <ConfirmDialog open={!!toDelete} title="Delete candidate?" message={`${toDelete?.name||'This candidate'} will be permanently removed.`}
-        confirmLabel="Delete" loading={deleting} onConfirm={confirmDelete} onCancel={()=>setToDelete(null)}/>
-    </>
-  );
+          {/* Filter panel — collapsible, same layout as ClientDashboard */}
+          <AnimatePresence>
+            {filterOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="mb-5 rounded-2xl border border-slate-100 bg-white p-4 shadow-card">
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
+                    {/* Technology */}
+                    <div>
+                      <label className="label">Technology</label>
+                      <select className="field" value={tech}
+                        onChange={e => { setTech(e.target.value); setOtherTech(''); setPage(1); }}>
+                        <option value="All">All technologies</option>
+                        {TECHNOLOGIES.map(t => <option key={t} value={t}>{t}</option>)}
+                        <option value="Others">Others</option>
+                      </select>
+                      {tech === 'Others' && (
+                        <input
+                          type="text"
+                          autoFocus
+                          value={otherTech}
+                          onChange={e => { setOtherTech(e.target.value); setPage(1); }}
+                          placeholder="Enter technology…"
+                          className="field mt-2 text-sm"
+                        />
+                      )}
+                    </div>
+
+                    {/* Skills */}
+                    <div>
+                      <label className="label">Skills</label>
+                      <div className="rounded-xl border border-slate-200 bg-white divide-y divide-slate-100 max-h-48 overflow-y-auto">
+                        {ALL_SKILLS.map(s => (
+                          <label key={s} className="flex cursor-pointer items-center justify-between px-3 py-2 hover:bg-slate-50 transition">
+                            <span className={`text-sm ${skills.includes(s) ? 'font-medium text-primary' : 'text-secondary'}`}>{s}</span>
+                            <input
+                              type="checkbox"
+                              checked={skills.includes(s)}
+                              onChange={() => { toggleSkill(s); setPage(1); }}
+                              className="h-4 w-4 shrink-0 cursor-pointer rounded border-slate-300 accent-primary"
+                            />
+                          </label>
+                        ))}
+                        <div className="px-3 py-2">
+                          <p className="text-xs font-medium text-slate-400 mb-1.5">Others</p>
+                          <input
+                            type="text"
+                            value={otherSkill}
+                            onChange={e => { setOtherSkill(e.target.value); setPage(1); }}
+                            placeholder="Enter skill…"
+                            className="field text-sm"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Min experience */}
+                    <div>
+                      <label className="label">
+                        Min experience: <span className="font-bold text-primary">{minExp} yrs</span>
+                      </label>
+                      <input type="range" min={0} max={14} value={minExp}
+                        onChange={e => { setMinExp(+e.target.value); setPage(1); }}
+                        className="w-full mt-2" style={{ accentColor: '#2563EB' }} />
+                    </div>
+
+                    {/* Max rate */}
+                    <div>
+                      <label className="label">
+                        Max rate: <span className="font-bold text-primary">${maxRate}/hr</span>
+                      </label>
+                      <input type="range" min={25} max={150} value={maxRate}
+                        onChange={e => { setMaxRate(+e.target.value); setPage(1); }}
+                        className="w-full mt-2" style={{ accentColor: '#2563EB' }} />
+                    </div>
+
+                  </div>
+                  {activeFilters > 0 && (
+                    <div className="mt-4 flex justify-end">
+                      <Button variant="ghost" size="sm" onClick={resetFilters}>
+                        <FiX size={13} /> Clear filters
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Results count */}
+          <p className="mb-4 text-sm text-slate-500">
+            <span className="font-semibold text-secondary">{filtered.length}</span> profiles available
+          </p>
+
+          {/* Card grid — same as client, but with recruiterView for Edit/Delete */}
+          {pageItems.length === 0 ? (
+            <div className="grid place-items-center rounded-2xl border border-dashed border-slate-200 py-20 text-center">
+              <p className="font-display text-lg font-bold text-secondary">No candidates found</p>
+              <p className="mt-1 text-sm text-slate-500">Try adjusting your filters.</p>
+              {activeFilters > 0 && (
+                <Button variant="outline" className="mt-4" onClick={resetFilters}>Clear filters</Button>
+              )}
+            </div>
+          ) : (
+            <div className={cn('grid gap-4', 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4')}>
+              {pageItems.map((c, i) => (
+                <CandidateCard
+                  key={c.id}
+                  candidate={c}
+                  inCart={false}
+                  onAdd={() => {}}
+                  index={i}
+                  recruiterView
+                  onEdit={() => navigate(`/admin/candidates/edit/${c.id}`)}
+                  onDelete={() => setToDelete(c)}
+                />
+              ))}
+            </div>
+          )}
+
+          <Pagination
+            page={safe} totalPages={totalPages}
+            onPrev={() => setPage(p => p - 1)} onNext={() => setPage(p => p + 1)} onPage={p => setPage(p)}
+          />
+
+        </PageTransition>
+      </main>
+
+      <ConfirmDialog
+        open={!!toDelete}
+        title="Delete candidate?"
+        message={`${toDelete?.name || 'This candidate'} will be permanently removed.`}
+        confirmLabel="Delete"
+        loading={deleting}
+        onConfirm={confirmDelete}
+        onCancel={() => setToDelete(null)}
+      />
+    </>
+  );
 }

@@ -27,11 +27,6 @@ export function LoginPage() {
   const [role, setRole] = useState<Role>('client');
   const [formErr, setFormErr] = useState<string | null>(null);
 
-  // ── Navigate AFTER React has re-rendered with the new user ──────────────
-  // Putting navigate() inside the submit handler fires before setUser() has
-  // caused a re-render, so ProtectedRoute would see null and bounce back.
-  // Watching `user` in useEffect guarantees we navigate only once the context
-  // value has updated.
   useEffect(() => {
     if (!user) return;
     const dest =
@@ -48,7 +43,6 @@ export function LoginPage() {
     try {
       const u = await login(v.email, v.password, role);
       push({ type: 'success', title: 'Login successful', description: `Welcome back, ${u.firstName}!` });
-      // ← do NOT call navigate() here; the useEffect above handles it
     } catch (e) {
       setFormErr((e as Error).message);
       push({ type: 'error', title: 'Login failed', description: (e as Error).message });
@@ -64,7 +58,7 @@ export function LoginPage() {
 
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
-      {/* ── Left brand panel ──────────────────────────────────────────── */}
+      {/* ── Left brand panel ── */}
       <div className="relative hidden overflow-hidden bg-secondary lg:flex lg:flex-col">
         <div className="absolute inset-0 opacity-30"
           style={{ backgroundImage: 'radial-gradient(600px 300px at 20% 10%,rgba(37,99,235,0.6),transparent),radial-gradient(500px 300px at 90% 90%,rgba(6,182,212,0.5),transparent)' }} />
@@ -98,7 +92,7 @@ export function LoginPage() {
         </div>
       </div>
 
-      {/* ── Right form ────────────────────────────────────────────────── */}
+      {/* ── Right form ── */}
       <div className="flex items-center justify-center p-6 sm:p-10 bg-surface">
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }} className="w-full max-w-md">
@@ -151,12 +145,16 @@ export function LoginPage() {
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-slate-500">
-            New to Qpact?{' '}
-            <Link to="/create-account" className="font-semibold text-primary hover:underline">
-              Create an account
-            </Link>
-          </p>
+          {/* ── Only clients can self-register ── */}
+          {role === 'client' && (
+            <p className="mt-6 text-center text-sm text-slate-500">
+              New to Qpact?{' '}
+              <Link to="/create-account" className="font-semibold text-primary hover:underline">
+                Create an account
+              </Link>
+            </p>
+          )}
+
         </motion.div>
       </div>
     </div>
