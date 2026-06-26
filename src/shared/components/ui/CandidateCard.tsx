@@ -63,7 +63,7 @@ export function CandidateCard({
             animate={{ opacity: 1, scale: 1 }}
             className="mb-2 inline-flex items-center gap-1 rounded-full bg-orange-50 px-2.5 py-0.5 text-xs font-semibold text-orange-600 border border-orange-200"
           >
-            🔥 Demand
+            🔥 On demand
           </motion.span>
         )}
         <div className="relative mb-3">

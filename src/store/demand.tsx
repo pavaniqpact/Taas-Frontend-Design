@@ -6,11 +6,15 @@ import { createContext, useContext, useMemo, useState, type ReactNode } from 're
  * Internally we keep  Map<candidateId, Set<userId>>  so we can correctly
  * add/remove per-user without losing demand from other users.
  *
- * isInDemand(id) → true when at least one user has the candidate shortlisted.
+ * isInDemand(id)            → true when at least one user has shortlisted it.
+ * demandedByOthers(id, me)  → true when someone OTHER than `me` shortlisted it.
+ *                             (Used for the "On demand" badge so a client never
+ *                              sees their own shortlist counted as demand.)
  */
 
 interface DemandCtx {
   isInDemand(candidateId: string): boolean;
+  demandedByOthers(candidateId: string, userId: string): boolean;
   addDemand(candidateId: string, userId: string): void;
   removeDemand(candidateId: string, userId: string): void;
   clearUserDemand(userId: string): void;
@@ -27,6 +31,13 @@ export function DemandProvider({ children }: { children: ReactNode }) {
       isInDemand(candidateId) {
         const users = map.get(candidateId);
         return !!users && users.size > 0;
+      },
+
+      demandedByOthers(candidateId, userId) {
+        const users = map.get(candidateId);
+        if (!users) return false;
+        for (const u of users) if (u !== userId) return true;
+        return false;
       },
 
       addDemand(candidateId, userId) {
