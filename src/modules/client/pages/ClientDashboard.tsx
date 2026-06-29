@@ -28,26 +28,31 @@ export function ClientDashboard() {
 
   const [search, setSearch]       = useState('');
   const [tech, setTech]           = useState('All');
-  const [otherTech, setOtherTech] = useState('');
   const [skills, setSkills]       = useState<string[]>([]);
-  const [otherSkill, setOtherSkill] = useState('');
   const [minExp, setMinExp]       = useState(0);
   const [maxRate, setMaxRate]     = useState(150);
   const [page, setPage]           = useState(1);
   const [filterOpen, setFilterOpen] = useState(false);
 
   const resetFilters = () => {
-    setSearch(''); setTech('All'); setOtherTech('');
-    setSkills([]); setOtherSkill('');
+    setSearch(''); setTech('All');
+    setSkills([]);
     setMinExp(0); setMaxRate(150); setPage(1);
+  };
+
+  // Changing technology refreshes the skill list and clears chosen skills.
+  const changeTech = (value: string) => {
+    setTech(value);
+    setSkills([]);
+    setPage(1);
   };
 
   const toggleSkill = (s: string) =>
     setSkills(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
 
-  const effectiveTech   = tech === 'Others' ? otherTech.trim() : tech;
-  const extraSkills     = otherSkill.trim() ? [otherSkill.trim()] : [];
-  const allActiveSkills = [...skills, ...extraSkills];
+  // Skills shown depend on the selected technology.
+  const skillOptions    = tech === 'All' ? ALL_SKILLS : (SKILLS_BY_TECH[tech] ?? []);
+  const allActiveSkills = skills;
 
   const activeFilters =
     (tech !== 'All' ? 1 : 0) +
@@ -64,11 +69,11 @@ export function ClientDashboard() {
         c.name.toLowerCase().includes(q) ||
         c.technology.toLowerCase().includes(q) ||
         c.skills.some(s => s.toLowerCase().includes(q));
-      const matchTech  = !effectiveTech || effectiveTech === 'All' || c.technology === effectiveTech;
+      const matchTech  = tech === 'All' || c.technology === tech;
       const matchSkill = allActiveSkills.length === 0 || allActiveSkills.some(s => c.skills.includes(s));
       return matchQ && matchTech && matchSkill && c.experience >= minExp && c.ratePerHour <= maxRate;
     });
-  }, [candidates, search, effectiveTech, allActiveSkills.join(','), minExp, maxRate, ids]);
+  }, [candidates, search, tech, allActiveSkills.join(','), minExp, maxRate, ids]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safe       = Math.min(page, totalPages);
@@ -131,28 +136,17 @@ export function ClientDashboard() {
                     <div>
                       <label className="label">Technology</label>
                       <select className="field" value={tech}
-                        onChange={e => { setTech(e.target.value); setOtherTech(''); setPage(1); }}>
+                        onChange={e => changeTech(e.target.value)}>
                         <option value="All">All technologies</option>
                         {TECHNOLOGIES.map(t => <option key={t} value={t}>{t}</option>)}
-                        <option value="Others">Others</option>
                       </select>
-                      {tech === 'Others' && (
-                        <input
-                          type="text"
-                          autoFocus
-                          value={otherTech}
-                          onChange={e => { setOtherTech(e.target.value); setPage(1); }}
-                          placeholder="Enter technology…"
-                          className="field mt-2 text-sm"
-                        />
-                      )}
                     </div>
 
                     {/* ── Skills: checkbox list + Others text input ── */}
                     <div>
                       <label className="label">Skills</label>
                       <div className="rounded-xl border border-slate-200 bg-white divide-y divide-slate-100 max-h-48 overflow-y-auto">
-                        {ALL_SKILLS.map(s => (
+                        {skillOptions.map(s => (
                           <label key={s} className="flex cursor-pointer items-center justify-between px-3 py-2 hover:bg-slate-50 transition">
                             <span className={`text-sm ${skills.includes(s) ? 'font-medium text-primary' : 'text-secondary'}`}>{s}</span>
                             <input
@@ -163,17 +157,9 @@ export function ClientDashboard() {
                             />
                           </label>
                         ))}
-                        {/* Others row */}
-                        <div className="px-3 py-2">
-                          <p className="text-xs font-medium text-slate-400 mb-1.5">Others</p>
-                          <input
-                            type="text"
-                            value={otherSkill}
-                            onChange={e => { setOtherSkill(e.target.value); setPage(1); }}
-                            placeholder="Enter skill…"
-                            className="field text-sm"
-                          />
-                        </div>
+                        {skillOptions.length === 0 && (
+                          <p className="px-3 py-2 text-sm text-slate-400">No skills listed for this technology.</p>
+                        )}
                       </div>
                     </div>
 
